@@ -7,7 +7,7 @@ from digi.xbee.devices import XBeeDevice
 
 #****************************************************************************************#
 # Replace with the serial port where your local module is connected to.
-PORT = "/dev/ttyUSB3" #La estacion
+PORT = "/dev/ttyUSB0" #La estacion
 # Replace with the baud rate of your local module.
 BAUD_RATE = 9600
 # El nodo XBee con el que se quiere comunicar.

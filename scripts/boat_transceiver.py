@@ -31,6 +31,8 @@ class XbeeBoat:
     def data_callback(self, _data):
         self.boat_data = _data
         print('Sending data: ', self.boat_data)
+        # Send the monitoring data to station
+        device.send_data_async(remote_device, xbee_node.boat_data)
         #rospy.logwarn(self.powerL)
 
 def main():
@@ -79,9 +81,6 @@ def main():
                     device.send_data_async(remote_device, 'Stopping mission.')
                 elif message == 'exit':
                     commActive = False
-
-            # Send the monitoring data to station
-            device.send_data_async(remote_device, xbee_node.boat_data)
             
             #rospy.spinOnce()
             rate.sleep()
