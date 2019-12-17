@@ -60,7 +60,7 @@ def main():
             if action == "exit":
                 commActive = False
 
-            rospy.spinOnce()
+            #rospy.spinOnce()
             rate.sleep()
 
     finally:

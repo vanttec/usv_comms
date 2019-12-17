@@ -26,6 +26,7 @@ class XbeeBoat:
         self.stop_pub = rospy.Publisher("/usv_comms/boat_transceiver/stop_mission", Empty, queue_size=10)
 
         self.empty_msg = Empty()
+        self.boat_data = String()
 
     def data_callback(self, _data):
         self.boat_data = _data
@@ -82,7 +83,7 @@ def main():
             # Send the monitoring data to station
             device.send_data_async(remote_device, xbee_node.boat_data)
             
-            rospy.spinOnce()
+            #rospy.spinOnce()
             rate.sleep()
 
     #If the device is not closed, close it.
