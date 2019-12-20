@@ -5,6 +5,7 @@ import rospy
 import time
 import sys
 from std_msgs.msg import String
+from std_msgs.msg import Empty
 from digi.xbee.devices import XBeeDevice
 
 parser = argparse.ArgumentParser()
@@ -44,6 +45,7 @@ class XbeeBoat:
         print('[USV] Digi XTend device initialized.')
 
         # ROS Configuration
+        self.ros_rate = rospy.Rate(_ros_rate)
         self._mon_sub = rospy.Subscriber("/usv_comms/boat_transceiver/data_input", String, self.data_callback)
         self.course_pub = rospy.Publisher("/usv_comms/boat_transceiver/course_config", String, queue_size=10)
         self.start_pub = rospy.Publisher("/usv_comms/boat_transceiver/start_mission", Empty, queue_size=10)
@@ -68,13 +70,13 @@ def main():
     rospy.init_node('boat_transceiver', anonymous=True)
 
     try:
-        usv = XbeeStation(PORT, BAUD_RATE, REMOTE_NODE_ID, ROS_RATE)
+        usv = XbeeBoat(PORT, BAUD_RATE, REMOTE_NODE_ID, ROS_RATE)
     except:
         print('[USV] Digi XTend device could not be initialized.')
         sys.exit(1)
 
     try:
-        while not rospy.is_shutdown() and commActive:
+        while not rospy.is_shutdown() and usv.comm_active:
             #Read data and chek if something has been received 
             xbee_message = usv.device.read_data()
             
