@@ -59,7 +59,7 @@ class XbeeBoat:
 
     def data_callback(self, _data):
         self.boat_data = _data.data
-        print('[USV] Sending data: ', self.boat_data)
+        #print('[USV] Sending data: ', self.boat_data)
         self.device.send_data_async(self.remote_device, self.boat_data)
 
 def main():
@@ -79,7 +79,7 @@ def main():
         while not rospy.is_shutdown() and usv.comm_active:
             #Read data and chek if something has been received 
             xbee_message = usv.device.read_data()
-            
+
             if xbee_message is not None:
                 #Decode and print the message 
                 message = xbee_message.data.decode()
