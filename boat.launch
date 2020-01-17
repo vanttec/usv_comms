@@ -1,5 +1,0 @@
-<launch>
-
-<node pkg="usv_comms" type="boat_transceiver.py" name="boat_transceiver" args="/dev/ttyUSB2" />
-
-</launch>

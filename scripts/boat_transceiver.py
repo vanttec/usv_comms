@@ -8,13 +8,13 @@ from std_msgs.msg import String
 from std_msgs.msg import Empty
 from digi.xbee.devices import XBeeDevice
 
-parser = argparse.ArgumentParser()
-parser.add_argument('dev')
-args = parser.parse_args()
+#parser = argparse.ArgumentParser()
+#parser.add_argument('dev')
+#args = parser.parse_args()
 
 #****************************************************************************************#
 # Replace with the serial port where your local module is connected to.
-PORT = args.dev
+PORT = rospy.get_param("boat_transceiver/xbee_port")
 # Replace with the baud rate of your local module.
 BAUD_RATE = 9600
 # El nodo XBee con el que se quiere comunicar.
@@ -98,6 +98,8 @@ def main():
         print('[USV] Terminating Session...')
         if usv.device is not None and usv.device.is_open():
             usv.device.close()
+
+    rospy.spin()
 
 if __name__ == "__main__":
     try:
