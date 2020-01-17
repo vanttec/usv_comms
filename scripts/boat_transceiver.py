@@ -67,7 +67,7 @@ def main():
     print(" |                       Boat                      |")
     print(" +-------------------------------------------------+\n")
     
-    rospy.init_node('boat_transceiver', anonymous=True)
+    rospy.init_node('boat_transceiver', anonymous=False)
 
     try:
         usv = XbeeBoat(PORT, BAUD_RATE, REMOTE_NODE_ID, ROS_RATE)
