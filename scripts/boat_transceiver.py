@@ -31,18 +31,18 @@ class XbeeBoat:
 
         self.device.open()    
         if not self.device.is_open():
-            print('[USV] Device could not be opened.')
+            rospy.loginfo('[USV] Device could not be opened.')
             raise Exception()
         
         self.device.flush_queues()
         self.xnetwork = self.device.get_network()
         self.remote_device = self.xnetwork.discover_device(_remote_id)
         if self.remote_device is None:
-            print('[USV] Could not find the remote device.')
+            rospy.loginfo('[USV] Could not find the remote device.')
             self.device.close()
             raise Exception()
             
-        print('[USV] Digi XTend device initialized.')
+        rospy.loginfo('[USV] Digi XTend device initialized.')
 
         # ROS Configuration
         self.ros_rate = rospy.Rate(_ros_rate)
