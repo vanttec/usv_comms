@@ -1,12 +1,14 @@
 #!/usr/bin/env python
 
 import argparse
-import rospy
-import time
 import sys
-from std_msgs.msg import String
-from std_msgs.msg import Empty
+import time
+
 from digi.xbee.devices import XBeeDevice
+import rospy
+from std_msgs.msg import Bool
+from std_msgs.msg import Empty
+from std_msgs.msg import String
 
 #parser = argparse.ArgumentParser()
 #parser.add_argument('dev')
@@ -48,8 +50,8 @@ class XbeeBoat:
         self.ros_rate = rospy.Rate(_ros_rate)
         self._mon_sub = rospy.Subscriber("/usv_comms/boat_transceiver/data_input", String, self.data_callback)
         self.course_pub = rospy.Publisher("/usv_comms/boat_transceiver/course_config", String, queue_size=10)
-        self.start_pub = rospy.Publisher("/usv_comms/boat_transceiver/start_mission", Empty, queue_size=10)
-        self.stop_pub = rospy.Publisher("/usv_comms/boat_transceiver/stop_mission", Empty, queue_size=10)
+        self.start_pub = rospy.Publisher("/usv_comms/boat_transceiver/start_mission", Bool, queue_size=10)
+        self.stop_pub = rospy.Publisher("/usv_comms/boat_transceiver/stop_mission", Bool, queue_size=10)
 
         self.empty_msg = Empty()
         self.boat_data = String()
