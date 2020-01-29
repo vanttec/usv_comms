@@ -6,7 +6,6 @@ import time
 
 from digi.xbee.devices import XBeeDevice
 import rospy
-from std_msgs.msg import Bool
 from std_msgs.msg import Empty
 from std_msgs.msg import String
 
@@ -28,6 +27,8 @@ ROS_RATE = 100
 class XbeeBoat:
     def __init__(self, _port, _baud_rate, _remote_id, _ros_rate):
         
+        self.usv_master_status = ""
+
         # Initialize and configure the DigiXTend Xbee Device
         self.device = XBeeDevice(_port, _baud_rate)
 
@@ -48,33 +49,43 @@ class XbeeBoat:
 
         # ROS Configuration
         self.ros_rate = rospy.Rate(_ros_rate)
-        self._mon_sub = rospy.Subscriber("/usv_comms/boat_transceiver/data_input", String, self.data_callback)
+
+        # ROS Subscriber
+        rospy.Subscriber("/usv_comms/boat_transceiver/data_input", String, self.data_callback)
+        rospy.Subscriber("/usv_master/usv_master_status", String, self.usv_master_callback)
+        
+
+        # ROS Publisher
+        self.stop_pub = rospy.Publisher("/usv_comms/boat_transceiver/stop_mission", Empty, queue_size=10)
         self.course_pub = rospy.Publisher("/usv_comms/boat_transceiver/course_config", String, queue_size=10)
-        self.start_pub = rospy.Publisher("/usv_comms/boat_transceiver/start_mission", Bool, queue_size=10)
-        self.stop_pub = rospy.Publisher("/usv_comms/boat_transceiver/stop_mission", Bool, queue_size=10)
+        self.start_pub = rospy.Publisher("/usv_comms/boat_transceiver/start_mission", Empty, queue_size=10)
+        self.general_status_pub = rospy.Publisher("/usv_comms/boat_transceiver/general_status", String, queue_size=10)
 
         self.empty_msg = Empty()
         self.boat_data = String()
 
         self.comm_active = True
-        print('[USV] Awaiting conversation...\n')
+        rospy.loginfo('[USV] Awaiting conversation...\n')
 
     def data_callback(self, _data):
         self.boat_data = _data.data
-        #print('[USV] Sending data: ', self.boat_data)
-        self.device.send_data_async(self.remote_device, self.boat_data)
+        #rospy.loginfo('[USV] Sending data: ', self.boat_data)
+        #self.device.send_data_async(self.remote_device, self.boat_data)
+
+    def usv_master_callback(self, status):
+        self.usv_master_status = status.data
 
 def main():
-    print(" +-------------------------------------------------+")
-    print(" |                       Boat                      |")
-    print(" +-------------------------------------------------+\n")
+    rospy.loginfo(" +-------------------------------------------------+")
+    rospy.loginfo(" |                       Boat                      |")
+    rospy.loginfo(" +-------------------------------------------------+\n")
     
-    rospy.init_node('boat_transceiver', anonymous=False)
+    rospy.init_node('boat_transceiver', anonymous=True)
 
     try:
         usv = XbeeBoat(PORT, BAUD_RATE, REMOTE_NODE_ID, ROS_RATE)
     except:
-        print('[USV] Digi XTend device could not be initialized.')
+        rospy.loginfo('[USV] Digi XTend device could not be initialized.')
         sys.exit(1)
 
     try:
@@ -83,21 +94,36 @@ def main():
             xbee_message = usv.device.read_data()
 
             if xbee_message is not None:
-                #Decode and print the message 
+                #Decode and rospy.loginfo the message 
                 message = xbee_message.data.decode()
-                if message[0] == 'c':
-                    usv.course_pub.publish(message[1])
-                    usv.device.send_data_async(usv.remote_device, 'Changing to course ' + message[1])
-                elif message == 's':
+
+                if message == 's' or message == 'S':
                     usv.start_pub.publish(usv.empty_msg)
                     usv.device.send_data_async(usv.remote_device, 'Starting mission...')
-                elif message == 'k':
+                    message='START '
+                elif message == 'k' or message == 'K':
                     usv.stop_pub.publish(usv.empty_msg)
-                    usv.device.send_data_async(usv.remote_device, 'Stopping mission.')
+                    usv.device.send_data_async(usv.remote_device, 'Stopping mission...')
+                    message='STOP '
+                
+                usv.course_pub.publish(message)
+                
+                '''
+                if message[0] == 'c':
+                    usv.course_pub.publish(message)
+                    usv.device.send_data_async(usv.remote_device, 'Changing to course ' + message[1])
+                elif len(message) >= 1:
+                    usv.course_pub.publish(message)
+                    usv.device.send_data_async(usv.remote_device, 'Changing')
+                '''
+
+                #usv.device.send_data_async(usv.remote_device, usv.usv_master_status)
+                            
+                
             usv.ros_rate.sleep()
     #If the device is not closed, close it.
     finally:
-        print('[USV] Terminating Session...')
+        rospy.loginfo('[USV] Terminating Session...')
         if usv.device is not None and usv.device.is_open():
             usv.device.close()
 
