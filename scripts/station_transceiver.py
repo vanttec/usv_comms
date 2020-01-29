@@ -30,45 +30,53 @@ class XbeeStation:
     
         self.device.open()    
         if not self.device.is_open():
-            print('[STATION] Device could not be opened.')
+            rospy.loginfo('[STATION] Device could not be opened.')
             raise Exception()
 
         self.device.flush_queues()
         self.xnetwork = self.device.get_network()
         self.remote_device = self.xnetwork.discover_device(_remote_id)
         if self.remote_device is None:
-            print('[STATION] Could not find the remote device.')
+            rospy.loginfo('[STATION] Could not find the remote device.')
             self.device.close()
             raise Exception()
             
-        print('[STATION] Digi XTend device initialized.')
+        rospy.loginfo('[STATION] Digi XTend device initialized.')
 
         # ROS Configuration
         self.ros_rate = rospy.Rate(_ros_rate)
+
+        # ROS Publisher
         self.boat_data_pub = rospy.Publisher('/usv_comms/station_transceiver/boat_data', String, queue_size=10)
-        self._config_sub = rospy.Subscriber('/usv_comms/station_transceiver/course_config', String, self.config_callback)
-        print('[STATION] ROS Node initialized.')
+
+        # ROS Subscriber
+        rospy.Subscriber('/usv_comms/station_transceiver/course_config', String, self.config_callback)
+        rospy.Subscriber("/usv_comms/boat_transceiver/general_status", String, self.general_status_callback)
+        rospy.loginfo('[STATION] ROS Node initialized.')
 
         self.comm_active = True
-        print('[STATION] Awaiting conversation...\n')
+        rospy.loginfo('[STATION] Awaiting conversation...\n')
 
     def config_callback(self, _config):
-        print('[STATION] Sending following message: ' + str(_config.data))
+        rospy.loginfo('[STATION] Sending following message: ' + str(_config.data))
         self.device.send_data_async(self.remote_device, str(_config.data))
         if str(_config.data) == 'exit':
             self.comm_active = False
 
+    def general_status_callback(self, status):
+        self.boat_general_status = status.data
+
 def main():
-    print(" +--------------------------------------+")
-    print(" |                Station               |")
-    print(" +--------------------------------------+\n")
+    rospy.loginfo(" +--------------------------------------+")
+    rospy.loginfo(" |                Station               |")
+    rospy.loginfo(" +--------------------------------------+\n")
 
     rospy.init_node('station_transceiver', anonymous=True)
     
     try:
         station = XbeeStation(PORT, BAUD_RATE, REMOTE_NODE_ID, ROS_RATE)
     except:
-        print('[STATION] Digi XTend device could not be initialized.')
+        rospy.loginfo('[STATION] Digi XTend device could not be initialized.')
         sys.exit(1)
 
     try:
@@ -81,7 +89,7 @@ def main():
 
             station.ros_rate.sleep()
     finally:
-        print('[STATION] Terminating Session...')
+        rospy.loginfo('[STATION] Terminating Session...')
         if station.device is not None and station.device.is_open():
             station.device.close()
 
